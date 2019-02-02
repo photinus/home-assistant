@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     TEMP_CELSIUS, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE,
-    STATE_UNKNOWN)
+    DEVICE_CLASS_BATTERY)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -39,6 +39,7 @@ SENSOR_TYPES = {
     'sum_rain_24': ['sum_rain_24', 'mm', 'mdi:weather-rainy', None],
     'battery_vp': ['Battery', '', 'mdi:battery', None],
     'battery_lvl': ['Battery_lvl', '', 'mdi:battery', None],
+    'battery_percent': ['battery_percent', '%', None, DEVICE_CLASS_BATTERY],
     'min_temp': ['Min Temp.', TEMP_CELSIUS, 'mdi:thermometer', None],
     'max_temp': ['Max Temp.', TEMP_CELSIUS, 'mdi:thermometer', None],
     'windangle': ['Angle', '', 'mdi:compass', None],
@@ -160,7 +161,7 @@ class NetAtmoSensor(Entity):
 
         if data is None:
             _LOGGER.warning("No data found for %s", self.module_name)
-            self._state = STATE_UNKNOWN
+            self._state = None
             return
 
         if self.type == 'temperature':
@@ -179,6 +180,8 @@ class NetAtmoSensor(Entity):
             self._state = data['CO2']
         elif self.type == 'pressure':
             self._state = round(data['Pressure'], 1)
+        elif self.type == 'battery_percent':
+            self._state = data['battery_percent']
         elif self.type == 'battery_lvl':
             self._state = data['battery_vp']
         elif (self.type == 'battery_vp' and

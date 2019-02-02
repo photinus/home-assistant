@@ -10,11 +10,13 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
-                                 CONF_NAME, CONF_RESOURCES)
+                                 CONF_NAME, CONF_RESOURCES,
+                                 CONF_UPDATE_INTERVAL)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
     async_dispatcher_connect)
@@ -24,14 +26,13 @@ DOMAIN = 'volvooncall'
 
 DATA_KEY = DOMAIN
 
-REQUIREMENTS = ['volvooncall==0.7.9']
+REQUIREMENTS = ['volvooncall==0.8.7']
 
 _LOGGER = logging.getLogger(__name__)
 
 MIN_UPDATE_INTERVAL = timedelta(minutes=1)
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=1)
 
-CONF_UPDATE_INTERVAL = 'update_interval'
 CONF_REGION = 'region'
 CONF_SERVICE_URL = 'service_url'
 CONF_SCANDINAVIAN_MILES = 'scandinavian_miles'
@@ -92,8 +93,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): (
             vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))),
-        vol.Optional(CONF_NAME, default={}): vol.Schema(
-            {cv.slug: cv.string}),
+        vol.Optional(CONF_NAME, default={}):
+            cv.schema_with_slug_keys(cv.string),
         vol.Optional(CONF_RESOURCES): vol.All(
             cv.ensure_list, [vol.In(RESOURCES)]),
         vol.Optional(CONF_REGION): cv.string,
@@ -106,12 +107,15 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Set up the Volvo On Call component."""
+    session = async_get_clientsession(hass)
+
     from volvooncall import Connection
     connection = Connection(
-        config[DOMAIN].get(CONF_USERNAME),
-        config[DOMAIN].get(CONF_PASSWORD),
-        config[DOMAIN].get(CONF_SERVICE_URL),
-        config[DOMAIN].get(CONF_REGION))
+        session=session,
+        username=config[DOMAIN].get(CONF_USERNAME),
+        password=config[DOMAIN].get(CONF_PASSWORD),
+        service_url=config[DOMAIN].get(CONF_SERVICE_URL),
+        region=config[DOMAIN].get(CONF_REGION))
 
     interval = config[DOMAIN].get(CONF_UPDATE_INTERVAL)
 

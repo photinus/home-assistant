@@ -92,7 +92,12 @@ class IPMAWeather(WeatherEntity):
     async def async_update(self):
         """Update Condition and Forecast."""
         with async_timeout.timeout(10, loop=self.hass.loop):
-            self._condition = await self._station.observation()
+            _new_condition = await self._station.observation()
+            if _new_condition is None:
+                _LOGGER.warning("Could not update weather conditions")
+                return
+            self._condition = _new_condition
+
             _LOGGER.debug("Updating station %s, condition %s",
                           self._station.local, self._condition)
             self._forecast = await self._station.forecast()
@@ -111,6 +116,9 @@ class IPMAWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
+        if not self._forecast:
+            return
+
         return next((k for k, v in CONDITION_CLASSES.items()
                      if self._forecast[0].idWeatherType in v), None)
 

@@ -33,12 +33,12 @@ SERVICE_INCREMENT = 'increment'
 SERVICE_RESET = 'reset'
 
 SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: vol.Any({
+    DOMAIN: cv.schema_with_slug_keys(
+        vol.Any({
             vol.Optional(CONF_ICON): cv.icon,
             vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL):
                 cv.positive_int,
@@ -46,7 +46,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_RESTORE, default=True): cv.boolean,
             vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
         }, None)
-    })
+    )
 }, extra=vol.ALLOW_EXTRA)
 
 

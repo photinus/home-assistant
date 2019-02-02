@@ -117,16 +117,24 @@ class EntityRegistry:
     @callback
     def async_get_or_create(self, domain, platform, unique_id, *,
                             suggested_object_id=None, config_entry_id=None,
-                            device_id=None):
+                            device_id=None, known_object_ids=None):
         """Get entity. Create if it doesn't exist."""
         entity_id = self.async_get_entity_id(domain, platform, unique_id)
         if entity_id:
             return self._async_update_entity(
-                entity_id, config_entry_id=config_entry_id,
-                device_id=device_id)
+                entity_id,
+                config_entry_id=config_entry_id,
+                device_id=device_id,
+                # When we changed our slugify algorithm, we invalidated some
+                # stored entity IDs with either a __ or ending in _.
+                # Fix introduced in 0.86 (Jan 23, 2019). Next line can be
+                # removed when we release 1.0 or in 2020.
+                new_entity_id='.'.join(slugify(part) for part
+                                       in entity_id.split('.', 1)))
 
         entity_id = self.async_generate_entity_id(
-            domain, suggested_object_id or '{}_{}'.format(platform, unique_id))
+            domain, suggested_object_id or '{}_{}'.format(platform, unique_id),
+            known_object_ids)
 
         entity = RegistryEntry(
             entity_id=entity_id,
@@ -140,6 +148,12 @@ class EntityRegistry:
                      domain, platform, entity_id)
         self.async_schedule_save()
         return entity
+
+    @callback
+    def async_remove(self, entity_id):
+        """Remove an entity from registry."""
+        self.entities.pop(entity_id)
+        self.async_schedule_save()
 
     @callback
     def async_update_entity(self, entity_id, *, name=_UNDEF,

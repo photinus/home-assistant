@@ -14,7 +14,7 @@ from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.providers import legacy_api_password, homeassistant
 
 from tests.common import (
-    async_test_home_assistant, INSTANCES, async_mock_mqtt_component, mock_coro,
+    async_test_home_assistant, INSTANCES, mock_coro,
     mock_storage as mock_storage, MockUser, CLIENT_ID)
 from tests.test_util.aiohttp import mock_aiohttp_client
 from tests.mock.zwave import MockNetwork, MockOption
@@ -93,14 +93,6 @@ def aioclient_mock():
 
 
 @pytest.fixture
-def mqtt_mock(loop, hass):
-    """Fixture to mock MQTT."""
-    client = loop.run_until_complete(async_mock_mqtt_component(hass))
-    client.reset_mock()
-    return client
-
-
-@pytest.fixture
 def mock_openzwave():
     """Mock out Open Z-Wave."""
     base_mock = MagicMock()
@@ -142,7 +134,7 @@ def hass_access_token(hass, hass_admin_user):
     """Return an access token to access Home Assistant."""
     refresh_token = hass.loop.run_until_complete(
         hass.auth.async_create_refresh_token(hass_admin_user, CLIENT_ID))
-    yield hass.auth.async_create_access_token(refresh_token)
+    return hass.auth.async_create_access_token(refresh_token)
 
 
 @pytest.fixture
@@ -165,6 +157,14 @@ def hass_read_only_user(hass, local_auth):
     read_only_group = hass.loop.run_until_complete(hass.auth.async_get_group(
         GROUP_ID_READ_ONLY))
     return MockUser(groups=[read_only_group]).add_to_hass(hass)
+
+
+@pytest.fixture
+def hass_read_only_access_token(hass, hass_read_only_user):
+    """Return a Home Assistant read only user."""
+    refresh_token = hass.loop.run_until_complete(
+        hass.auth.async_create_refresh_token(hass_read_only_user, CLIENT_ID))
+    return hass.auth.async_create_access_token(refresh_token)
 
 
 @pytest.fixture

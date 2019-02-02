@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE,
-    CONF_MONITORED_CONDITIONS, CONF_NAME, UNIT_UV_INDEX)
+    CONF_MONITORED_CONDITIONS, CONF_NAME, UNIT_UV_INDEX, CONF_UPDATE_INTERVAL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -23,11 +23,11 @@ REQUIREMENTS = ['python-forecastio==1.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = "Powered by Dark Sky"
-CONF_UNITS = 'units'
-CONF_UPDATE_INTERVAL = 'update_interval'
+ATTRIBUTION = "Powered by Dark Sky"
+
 CONF_FORECAST = 'forecast'
 CONF_LANGUAGE = 'language'
+CONF_UNITS = 'units'
 
 DEFAULT_LANGUAGE = 'en'
 
@@ -73,7 +73,7 @@ SENSOR_TYPES = {
                             ['hourly', 'daily']],
     'temperature': ['Temperature',
                     '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer',
-                    ['currently', 'hourly', 'daily']],
+                    ['currently', 'hourly']],
     'apparent_temperature': ['Apparent Temperature',
                              '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer',
                              ['currently', 'hourly']],
@@ -130,6 +130,10 @@ SENSOR_TYPES = {
                  ['currently', 'hourly', 'daily']],
     'moon_phase': ['Moon Phase', None, None, None, None, None,
                    'mdi:weather-night', ['daily']],
+    'sunrise_time': ['Sunrise', None, None, None, None, None,
+                     'mdi:white-balance-sunny', ['daily']],
+    'sunset_time': ['Sunset', None, None, None, None, None,
+                    'mdi:weather-night', ['daily']],
 }
 
 CONDITION_PICTURES = {
@@ -296,7 +300,7 @@ class DarkSkySensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
     def update(self):
