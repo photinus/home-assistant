@@ -33,6 +33,7 @@ CONF_MINUTE = 'minute'
 CONF_HOUR = 'hour'
 CONF_SERVER_ID = 'server_id'
 CONF_MANUAL = 'manual'
+CONF_SECURE = 'True'
 
 ICON = 'mdi:speedometer'
 
@@ -150,6 +151,7 @@ class SpeedtestData:
         """Initialize the data object."""
         self.data = None
         self._server_id = config.get(CONF_SERVER_ID)
+        self.secure = CONF_SECURE
         if not config.get(CONF_MANUAL):
             track_time_change(
                 hass, self.update, second=config.get(CONF_SECOND),
